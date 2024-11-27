@@ -6,9 +6,9 @@ import json
 app = Flask(__name__)
 
 # Paths to secret files
-API_KEY_FILE_PATH = "C:\\secrets\\IndicatorKey.txt"
-NEWS_API_KEY_FILE_PATH = "C:\\secrets\\NewsKey.txt"
-WEBHOOK_URLS_FILE_PATH = "C:\\secrets\\WebhookURLs.txt"
+API_KEY_FILE_PATH = r"C:\Users\David\OneDrive\Docs - Wasabi\GitHub\secrets\IndicatorKey.txt"
+NEWS_API_KEY_FILE_PATH = r"C:\Users\David\OneDrive\Docs - Wasabi\GitHub\secrets\NewsKey.txt"
+WEBHOOK_URLS_FILE_PATH = r"C:\Users\David\OneDrive\Docs - Wasabi\GitHub\secrets\WebhookURLs.txt"
 
 # Load the OpenAI API key from file
 try:
@@ -48,7 +48,9 @@ def fetch_breaking_news():
         'apiKey': NEWS_API_KEY,
         'language': 'en',
         'sortBy': 'publishedAt',
-        'pageSize': 5  # Get the top 5 headlines for context
+        #'pageSize': 5  # Get the top 5 headlines for context
+        'pageSize': 10,  # Get the top 5 headlines for context           ## DJJ
+        'category': 'business'
     }
     response = requests.get(NEWS_API_URL, params=params)
     
@@ -61,6 +63,7 @@ def fetch_breaking_news():
     news_headlines = [article['title'] for article in news_data]
     news_summary = "\n".join([f"- {article['title']}: {article['description']}" for article in news_data])
     
+    print(news_summary)
     return news_headlines, news_summary if news_summary else "No breaking news available."
 
 def parse_gpt_response(response_text):
@@ -81,17 +84,21 @@ def parse_gpt_response(response_text):
         return {"impact": "Unknown", "explanation": "Unable to parse ChatGPT JSON response due to formatting issues."}
 
 def ask_gpt(prompt):
+    chatGPTModel = "gpt-3.5-turbo"                                              ### DJJ
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gpt-4-turbo",  # Adjust model name if necessary
+        #"model": "gpt-4-turbo",  # Adjust model name if necessary
+        "model": chatGPTModel,  # Adjust model name if necessary                ###   DJJ
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 150,
         "logprobs": True,  # Log the completion for viewing in the OpenAI API dashboard
     }
+
     response = requests.post(API_URL, headers=headers, json=data)
+
     if response.status_code != 200:
         raise Exception(f"OpenAI API request failed: {response.text}")
     
@@ -164,4 +171,5 @@ def option_alpha_trigger():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    #app.run(port=5000)
+    option_alpha_trigger()
